@@ -5,8 +5,12 @@ const mongoosePaginate = require("mongoose-paginate");
 const _ = require("underscore");
 const app = express();
 const Usuario = require("../models/usuario");
+const {
+    verificaToken,
+    verificaAdmin_Role,
+} = require("../middlewares/autenticacion");
 
-app.get("/usuario", function(req, res) {
+app.get("/usuario", verificaToken, function(req, res) {
     let desde = req.query.desde || 0;
     desde = Number(desde);
     let limite = req.query.limite || 5;
@@ -33,28 +37,7 @@ app.get("/usuario", function(req, res) {
         });
 });
 
-/* app.get("/usuario/:page?", function(req, res) {
-    var page = 1;
-    if ((req.param, page)) {
-        page = req.params.page;
-    }
-    var itemsPerPage = 5;
-    Usuario.find()
-        .sort("_id")
-        .paginate(page, itemsPerPage, (err, users, total) => {
-            if (err) return res.status(500).send({ message: "error en la peticion" });
-            if (!users)
-                return res.status(404).send({ message: "no hay usuarios disponibles" });
-
-            return res.status(200).send({
-                users,
-                total,
-                pages: Math.ceil(total / itemsPerPage),
-            });
-        });
-}); */
-
-app.post("/usuario", function(req, res) {
+app.post("/usuario", [verificaToken, verificaAdmin_Role], function(req, res) {
     let body = req.body;
     let usuario = new Usuario({
         nombre: body.nombre,
@@ -85,7 +68,10 @@ app.post("/usuario", function(req, res) {
     }
 });
 
-app.put("/usuario/:id", function(req, res) {
+app.put("/usuario/:id", [verificaToken, verificaAdmin_Role], function(
+    req,
+    res
+) {
     let id = req.params.id;
 
     let body = _.pick(req.body[("nombre", "email", "img", "role", "estado")]);
@@ -109,7 +95,10 @@ app.put("/usuario/:id", function(req, res) {
     );
 });
 
-app.delete("/usuario/:id", function(req, res) {
+app.delete("/usuario/:id", [verificaToken, verificaAdmin_Role], function(
+    req,
+    res
+) {
     let id = req.params.id;
 
     let cambioEstado = { estado: false };
